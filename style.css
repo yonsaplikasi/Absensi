@@ -1,0 +1,24 @@
+*{box-sizing:border-box}
+body{margin:0;background:#f2f4f7;font-family:Arial,sans-serif;color:#202124}
+.app{max-width:520px;margin:auto;padding:18px}
+header{text-align:center;padding:18px 10px}
+header h1{margin:0;font-size:24px}
+header p{margin:6px 0;color:#666}
+.card{background:white;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 3px 15px #00000012}
+label{display:block;font-weight:bold;margin-bottom:8px}
+select{width:100%;padding:13px;border:1px solid #ccc;border-radius:10px;font-size:16px;background:white}
+.identity{margin-top:12px;padding:12px;background:#f7f8fa;border-radius:10px;line-height:1.8}
+.hidden{display:none}
+.gps-box{margin-top:16px;padding:14px;border-radius:10px;background:#f7f8fa}
+.gps-box p{margin:7px 0 0}
+.buttons{display:grid;gap:10px;margin-top:18px}
+.btn{border:0;border-radius:12px;padding:15px;font-size:16px;font-weight:bold;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.masuk{background:#dff5e4}
+.keluar{background:#fde2e2}
+.message{margin-top:15px;padding:12px;border-radius:10px;display:none;line-height:1.5}
+.message.show{display:block}
+.message.ok{background:#e6f4ea}
+.message.error{background:#fce8e6}
+.message.warn{background:#fff4ce}
+.small{font-size:13px;color:#666;line-height:1.6}
