@@ -1,51 +1,179 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Absensi Pegawai - Dinas X</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Absensi Pegawai - Dinas X</title>
+
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<main class="app">
-  <header>
-    <h1>ABSENSI PEGAWAI</h1>
-    <p>Dinas X</p>
-  </header>
 
-  <section class="card">
-    <label>Nama Pegawai</label>
-    <select id="employee">
-      <option value="">Memuat data...</option>
-    </select>
+    <main class="container">
 
-    <div id="identity" class="identity hidden">
-      <div><b>NIP:</b> <span id="nip"></span></div>
-      <div><b>Bagian:</b> <span id="bagian"></span></div>
-    </div>
+        <section class="card">
 
-    <div class="gps-box" id="gpsBox">
-      <b>📍 Status Lokasi</b>
-      <p id="gpsStatus">Memeriksa kesiapan GPS...</p>
-    </div>
+            <!-- ==================================================
+                 JUDUL
+            =================================================== -->
 
-    <div class="buttons">
-      <button class="btn masuk" id="btnMasuk">🟢 ABSEN MASUK</button>
-      <button class="btn keluar" id="btnKeluar">🔴 ABSEN KELUAR</button>
-    </div>
+            <h1>ABSENSI PEGAWAI</h1>
+            <p class="sub">DINAS X</p>
 
-    <div id="message" class="message"></div>
-  </section>
 
-  <section class="card">
-    <h2>Informasi Keamanan</h2>
-    <p class="small">
-      Akun Google dan informasi perangkat digunakan sebagai data audit.
-      Perubahan akun atau perangkat dapat ditandai untuk pemeriksaan admin.
-    </p>
-  </section>
-</main>
+            <!-- ==================================================
+                 FORM LOGIN
+            =================================================== -->
 
-<script src="app.js"></script>
+            <div id="loginBox">
+
+                <label for="nip">NIP</label>
+
+                <input
+                    id="nip"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="Masukkan NIP"
+                >
+
+
+                <label for="pin">PIN</label>
+
+                <input
+                    id="pin"
+                    type="password"
+                    inputmode="numeric"
+                    maxlength="8"
+                    placeholder="Masukkan PIN"
+                >
+
+
+                <button
+                    id="loginBtn"
+                    class="primary"
+                    type="button"
+                >
+                    MASUK
+                </button>
+
+            </div>
+
+
+            <!-- ==================================================
+                 DATA PEGAWAI
+            =================================================== -->
+
+            <div id="employeeBox" class="hidden">
+
+                <div class="identity">
+
+                    <div>
+                        <small>Nama</small>
+                        <strong id="nama"></strong>
+                    </div>
+
+                    <div>
+                        <small>NIP</small>
+                        <strong id="nipView"></strong>
+                    </div>
+
+                    <div>
+                        <small>Bagian</small>
+                        <strong id="bagian"></strong>
+                    </div>
+
+                </div>
+
+
+                <!-- ==================================================
+                     STATUS GPS
+                =================================================== -->
+
+                <div
+                    id="gpsStatus"
+                    class="status"
+                >
+                    Memeriksa GPS...
+                </div>
+
+
+                <!-- ==================================================
+                     TOMBOL ABSENSI
+                =================================================== -->
+
+                <button
+                    id="masukBtn"
+                    class="primary"
+                    type="button"
+                >
+                    ABSEN MASUK
+                </button>
+
+                <button
+                    id="keluarBtn"
+                    class="secondary"
+                    type="button"
+                >
+                    ABSEN KELUAR
+                </button>
+
+
+                <!-- ==================================================
+                     LOGOUT
+                =================================================== -->
+
+                <button
+                    id="logoutBtn"
+                    class="linkbtn"
+                    type="button"
+                >
+                    Keluar dari akun
+                </button>
+
+            </div>
+
+
+            <!-- ==================================================
+                 PESAN / NOTIFIKASI
+            =================================================== -->
+
+            <div
+                id="message"
+                class="message"
+            ></div>
+
+
+            <!-- ==================================================
+                 INFORMASI KEAMANAN
+            =================================================== -->
+
+            <div class="security">
+
+                <b>Keamanan:</b>
+
+                NIP + PIN memastikan identitas.
+                Email Google dan Device ID hanya audit.
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ========================================================
+         JAVASCRIPT
+    ========================================================= -->
+
+    <script src="app.js"></script>
+
 </body>
+
 </html>
+
