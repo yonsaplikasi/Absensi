@@ -1,199 +1,277 @@
-// GANTI dengan URL Web App Apps Script setelah deployment.
-const API_URL = "https://script.google.com/macros/s/AKfycbyo3L5YCv9odv7brs8jIAr01hGtpFfs0IWEBT6jE5Vg2LJjdxHVvz0dYkevENmC3HCTkA/exec";
+// ============================================================
+// ABSENSI DINAS X - FRONTEND V2
+// ============================================================
 
-const employeeEl = document.getElementById("employee");
-const identityEl = document.getElementById("identity");
-const nipEl = document.getElementById("nip");
-const bagianEl = document.getElementById("bagian");
-const gpsStatusEl = document.getElementById("gpsStatus");
-const messageEl = document.getElementById("message");
-const btnMasuk = document.getElementById("btnMasuk");
-const btnKeluar = document.getElementById("btnKeluar");
+// URL Web App Google Apps Script
+const API_URL = "PASTE_URL_WEB_APP_APPS_SCRIPT_DI_SINI";
 
-let employees = [];
-let lastPosition = null;
+// Helper mengambil elemen HTML berdasarkan ID
+const $ = (id) => document.getElementById(id);
 
-document.addEventListener("DOMContentLoaded", async () => {
-  employeeEl.addEventListener("change", updateIdentity);
-  btnMasuk.addEventListener("click", () => doAttendance("MASUK"));
-  btnKeluar.addEventListener("click", () => doAttendance("KELUAR"));
-  await loadEmployees();
-  checkGps();
-});
+// Menyimpan data sesi pegawai yang sedang login
+let session = null;
 
-async function loadEmployees(){
-  if(API_URL.includes("PASTE_URL")){
-    showMessage("URL Apps Script belum diisi di app.js.", "error");
-    employeeEl.innerHTML = '<option value="">URL backend belum diisi</option>';
-    return;
-  }
 
-  try{
-    const res = await fetch(API_URL,{
-      method:"POST",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({action:"getEmployees"})
+// ============================================================
+// API
+// ============================================================
+
+async function api(payload) {
+    const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload)
     });
-    const data = await res.json();
 
-    if(!data.ok) throw new Error(data.message);
-
-    employees = data.employees || [];
-    employeeEl.innerHTML = '<option value="">-- Pilih nama Anda --</option>';
-
-    employees.forEach(e=>{
-      const opt = document.createElement("option");
-      opt.value = e.nip;
-      opt.textContent = `${e.nama} — ${e.nip}`;
-      employeeEl.appendChild(opt);
-    });
-  }catch(err){
-    showMessage("Gagal mengambil data pegawai: "+err.message,"error");
-  }
+    return await response.json();
 }
 
-function updateIdentity(){
-  const e = employees.find(x => x.nip === employeeEl.value);
-  if(!e){
-    identityEl.classList.add("hidden");
-    return;
-  }
-  nipEl.textContent = e.nip;
-  bagianEl.textContent = e.bagian || "-";
-  identityEl.classList.remove("hidden");
+
+// ============================================================
+// PESAN / NOTIFIKASI
+// ============================================================
+
+function msg(text, success = false) {
+    const element = $("message");
+
+    element.textContent = text;
+    element.className = "message show";
+    element.style.background = success
+        ? "#eef7ee"
+        : "#fff0f0";
 }
 
-function checkGps(){
-  if(!navigator.geolocation){
-    gpsStatusEl.textContent = "Browser ini tidak mendukung GPS/lokasi.";
-    return;
-  }
 
-  navigator.geolocation.getCurrentPosition(
-    pos=>{
-      lastPosition = pos;
-      gpsStatusEl.textContent =
-        `Lokasi tersedia. Akurasi sekitar ${Math.round(pos.coords.accuracy)} meter.`;
-    },
-    err=>{
-      lastPosition = null;
-      if(err.code === 1){
-        gpsStatusEl.textContent =
-          "Akses lokasi ditolak. Silakan izinkan akses lokasi pada browser.";
-      }else{
-        gpsStatusEl.textContent =
-          "Lokasi belum tersedia. Harap nyalakan GPS/Lokasi pada HP lalu tekan Coba Lagi.";
-      }
-    },
-    {enableHighAccuracy:true, timeout:10000, maximumAge:0}
-  );
-}
+// ============================================================
+// IDENTITAS PERANGKAT
+// ============================================================
 
-function getDeviceId(){
-  const key = "dinas_x_device_id";
-  let id = localStorage.getItem(key);
-  if(!id){
-    id = "DEV-" + crypto.randomUUID();
-    localStorage.setItem(key,id);
-  }
-  return id;
-}
+function device() {
+    let deviceId = localStorage.getItem("dinas_x_device_id");
 
-function getBrowserInfo(){
-  return navigator.userAgent || "";
-}
+    if (!deviceId) {
+        deviceId = crypto.randomUUID
+            ? crypto.randomUUID()
+            : "dev-" + Date.now();
 
-function getOsInfo(){
-  return navigator.platform || "";
-}
-
-async function getGoogleEmail(){
-  // V1: email tidak menjadi pengunci.
-  // Jika nanti menggunakan Google Identity Services/OAuth,
-  // email akun Google yang terautentikasi dapat dikirim di sini.
-  return "";
-}
-
-async function getFreshPosition(){
-  return new Promise((resolve,reject)=>{
-    if(!navigator.geolocation){
-      reject(new Error("Browser tidak mendukung GPS."));
-      return;
+        localStorage.setItem(
+            "dinas_x_device_id",
+            deviceId
+        );
     }
 
-    navigator.geolocation.getCurrentPosition(
-      p=>resolve(p),
-      e=>{
-        if(e.code===1)
-          reject(new Error("Akses GPS ditolak. Silakan izinkan lokasi."));
-        else
-          reject(new Error("GPS belum tersedia. Harap nyalakan GPS/Lokasi pada HP."));
-      },
-      {enableHighAccuracy:true,timeout:15000,maximumAge:0}
-    );
-  });
+    return deviceId;
 }
 
-async function doAttendance(type){
-  const nip = employeeEl.value;
-  if(!nip){
-    showMessage("Silakan pilih nama Anda terlebih dahulu.","warn");
-    return;
-  }
 
-  setButtons(false);
-  showMessage("Memeriksa lokasi GPS...","warn");
+// ============================================================
+// GPS / GEOLOCATION
+// ============================================================
 
-  try{
-    const pos = await getFreshPosition();
-    lastPosition = pos;
-
-    const googleEmail = await getGoogleEmail();
-
-    const payload = {
-      action:"submitAttendance",
-      type:type,
-      nip:nip,
-      latitude:pos.coords.latitude,
-      longitude:pos.coords.longitude,
-      accuracy:pos.coords.accuracy,
-      deviceId:getDeviceId(),
-      browser:getBrowserInfo(),
-      os:getOsInfo(),
-      googleEmail:googleEmail
-    };
-
-    const res = await fetch(API_URL,{
-      method:"POST",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify(payload)
+function pos() {
+    return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
     });
+}
 
-    const data = await res.json();
 
-    if(data.ok){
-      let extra = "";
-      if(data.auditStatus === "PERLU_PEMERIKSAAN"){
-        extra = "<br><b>Catatan:</b> transaksi akan diperiksa admin.";
-      }
-      showMessage(data.message+"<br>Waktu server: "+data.serverTime+extra,
-        data.auditStatus==="PERLU_PEMERIKSAAN" ? "warn" : "ok");
-    }else{
-      showMessage(data.message || "Absensi ditolak.","error");
+// ============================================================
+// LOGIN
+// ============================================================
+
+async function login() {
+    const nip = $("nip").value.trim();
+    const pin = $("pin").value.trim();
+
+    // Validasi input
+    if (!nip || !pin) {
+        return msg("NIP dan PIN wajib diisi.");
     }
-  }catch(err){
-    showMessage(err.message || "Terjadi kesalahan.","error");
-  }finally{
-    setButtons(true);
-  }
+
+    $("loginBtn").disabled = true;
+
+    try {
+        // Kirim data login ke Apps Script
+        const result = await api({
+            action: "login",
+            nip: nip,
+            pin: pin
+        });
+
+        // Jika login gagal
+        if (!result.ok) {
+            throw new Error(result.message);
+        }
+
+        // Simpan sesi
+        session = {
+            nip: nip,
+            pin: pin,
+            employee: result.employee
+        };
+
+        // Tampilkan data pegawai
+        $("nama").textContent = result.employee.nama;
+        $("nipView").textContent = result.employee.nip;
+        $("bagian").textContent = result.employee.bagian;
+
+        // Ganti tampilan login ke tampilan pegawai
+        $("loginBox").classList.add("hidden");
+        $("employeeBox").classList.remove("hidden");
+
+        msg("Login berhasil.", true);
+
+        // Cek GPS
+        gps();
+
+    } catch (error) {
+        msg(error.message);
+
+    } finally {
+        $("loginBtn").disabled = false;
+    }
 }
 
-function setButtons(enabled){
-  btnMasuk.disabled = !enabled;
-  btnKeluar.disabled = !enabled;
+
+// ============================================================
+// CEK GPS
+// ============================================================
+
+async function gps() {
+    try {
+        const position = await pos();
+
+        const accuracy = Math.round(
+            position.coords.accuracy
+        );
+
+        $("gpsStatus").textContent =
+            "GPS aktif. Akurasi sekitar " +
+            accuracy +
+            " meter.";
+
+    } catch (error) {
+        $("gpsStatus").textContent =
+            "GPS belum tersedia. Nyalakan Lokasi/GPS pada HP.";
+    }
 }
 
-function showMessage(text,type){
-  messageEl.innerHTML = text;
-  messageEl.className = "message show "+type;
+
+// ============================================================
+// ABSENSI MASUK / KELUAR
+// ============================================================
+
+async function attendance(type) {
+
+    // Pastikan pegawai sudah login
+    if (!session) {
+        return msg("Silakan login.");
+    }
+
+    // Nonaktifkan tombol sementara
+    $("masukBtn").disabled = true;
+    $("keluarBtn").disabled = true;
+
+    try {
+        // Ambil lokasi GPS
+        const position = await pos();
+
+        // Kirim data absensi ke Apps Script
+        const result = await api({
+            action: "submitAttendance",
+
+            type: type,
+
+            nip: session.nip,
+            pin: session.pin,
+
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+
+            deviceId: device(),
+
+            browser: navigator.userAgent,
+            os: navigator.platform,
+
+            googleEmail: ""
+        });
+
+        // Jika absensi gagal
+        if (!result.ok) {
+            throw new Error(result.message);
+        }
+
+        // Pesan hasil absensi
+        let message =
+            result.message +
+            " Waktu server: " +
+            result.serverTime;
+
+        // Jika sistem memberikan status pemeriksaan
+        if (
+            result.auditStatus ===
+            "PERLU_PEMERIKSAAN"
+        ) {
+            message +=
+                " | " +
+                result.auditCatatan;
+        }
+
+        msg(message, true);
+
+    } catch (error) {
+        msg(error.message);
+
+    } finally {
+        // Aktifkan kembali tombol
+        $("masukBtn").disabled = false;
+        $("keluarBtn").disabled = false;
+    }
 }
+
+
+// ============================================================
+// LOGOUT
+// ============================================================
+
+function logout() {
+    // Hapus sesi
+    session = null;
+
+    // Kosongkan PIN
+    $("pin").value = "";
+
+    // Kembali ke tampilan login
+    $("employeeBox").classList.add("hidden");
+    $("loginBox").classList.remove("hidden");
+
+    msg("Anda telah keluar.", true);
+}
+
+
+// ============================================================
+// EVENT BUTTON
+// ============================================================
+
+$("loginBtn").onclick = login;
+
+$("masukBtn").onclick = () => {
+    attendance("MASUK");
+};
+
+$("keluarBtn").onclick = () => {
+    attendance("KELUAR");
+};
+
+$("logoutBtn").onclick = logout;
