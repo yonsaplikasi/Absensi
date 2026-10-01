@@ -1,24 +1,203 @@
-*{box-sizing:border-box}
-body{margin:0;background:#f2f4f7;font-family:Arial,sans-serif;color:#202124}
-.app{max-width:520px;margin:auto;padding:18px}
-header{text-align:center;padding:18px 10px}
-header h1{margin:0;font-size:24px}
-header p{margin:6px 0;color:#666}
-.card{background:white;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 3px 15px #00000012}
-label{display:block;font-weight:bold;margin-bottom:8px}
-select{width:100%;padding:13px;border:1px solid #ccc;border-radius:10px;font-size:16px;background:white}
-.identity{margin-top:12px;padding:12px;background:#f7f8fa;border-radius:10px;line-height:1.8}
-.hidden{display:none}
-.gps-box{margin-top:16px;padding:14px;border-radius:10px;background:#f7f8fa}
-.gps-box p{margin:7px 0 0}
-.buttons{display:grid;gap:10px;margin-top:18px}
-.btn{border:0;border-radius:12px;padding:15px;font-size:16px;font-weight:bold;cursor:pointer}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.masuk{background:#dff5e4}
-.keluar{background:#fde2e2}
-.message{margin-top:15px;padding:12px;border-radius:10px;display:none;line-height:1.5}
-.message.show{display:block}
-.message.ok{background:#e6f4ea}
-.message.error{background:#fce8e6}
-.message.warn{background:#fff4ce}
-.small{font-size:13px;color:#666;line-height:1.6}
+/* ============================================================
+   RESET / GLOBAL
+   ============================================================ */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #f2f4f7;
+    font-family: Arial, sans-serif;
+    color: #202124;
+}
+
+
+/* ============================================================
+   CONTAINER
+   ============================================================ */
+
+.container {
+    max-width: 430px;
+    margin: 30px auto;
+    padding: 15px;
+}
+
+
+/* ============================================================
+   CARD UTAMA
+   ============================================================ */
+
+.card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+
+    box-shadow:
+        0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+
+/* ============================================================
+   JUDUL
+   ============================================================ */
+
+h1 {
+    text-align: center;
+    font-size: 23px;
+    margin: 0;
+}
+
+.sub {
+    text-align: center;
+    color: #666666;
+    margin: 6px 0 24px;
+}
+
+
+/* ============================================================
+   LABEL & INPUT
+   ============================================================ */
+
+label {
+    display: block;
+    margin: 14px 0 6px;
+    font-weight: 700;
+}
+
+input {
+    width: 100%;
+    padding: 13px;
+
+    border: 1px solid #cccccc;
+    border-radius: 9px;
+
+    font-size: 16px;
+}
+
+
+/* ============================================================
+   BUTTON
+   ============================================================ */
+
+button {
+    width: 100%;
+    padding: 14px;
+
+    border: 0;
+    border-radius: 9px;
+
+    font-weight: 700;
+    font-size: 15px;
+
+    cursor: pointer;
+    margin-top: 12px;
+}
+
+
+/* Tombol utama */
+.primary {
+    background: #1769aa;
+    color: #ffffff;
+}
+
+
+/* Tombol sekunder */
+.secondary {
+    background: #555555;
+    color: #ffffff;
+}
+
+
+/* Tombol logout */
+.linkbtn {
+    background: transparent;
+    color: #555555;
+}
+
+
+/* ============================================================
+   IDENTITAS PEGAWAI
+   ============================================================ */
+
+.identity {
+    background: #f5f7f9;
+    border-radius: 10px;
+
+    padding: 12px;
+    margin-bottom: 14px;
+}
+
+.identity div {
+    margin: 7px 0;
+}
+
+.identity small {
+    display: block;
+    color: #777777;
+}
+
+.identity strong {
+    display: block;
+}
+
+
+/* ============================================================
+   STATUS GPS
+   ============================================================ */
+
+.status {
+    padding: 11px;
+
+    border-radius: 9px;
+    background: #eef3f7;
+
+    margin-bottom: 10px;
+
+    font-size: 14px;
+}
+
+
+/* ============================================================
+   PESAN / NOTIFIKASI
+   ============================================================ */
+
+.message {
+    margin-top: 14px;
+    padding: 10px;
+
+    border-radius: 9px;
+
+    display: none;
+}
+
+.message.show {
+    display: block;
+}
+
+
+/* ============================================================
+   INFORMASI KEAMANAN
+   ============================================================ */
+
+.security {
+    margin-top: 18px;
+    padding: 12px;
+
+    background: #fff8e6;
+    border-radius: 9px;
+
+    font-size: 12px;
+    color: #6b5a2b;
+}
+
+
+/* ============================================================
+   HIDDEN
+   ============================================================ */
+
+.hidden {
+    display: none;
+}
+
