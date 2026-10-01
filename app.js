@@ -3,7 +3,7 @@
 // ============================================================
 
 // URL Web App Google Apps Script
-const API_URL = "PASTE_URL_WEB_APP_APPS_SCRIPT_DI_SINI";
+const API_URL = "https://script.google.com/macros/s/AKfycbxfLxZDr31XgKIJhgFgi-mWPGdwpJXQtaW5kulqYFJ-KJm8gNuQc3HMgkunPd8ZiOCF9w/exec";
 
 // Helper mengambil elemen HTML berdasarkan ID
 const $ = (id) => document.getElementById(id);
