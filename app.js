@@ -2,7 +2,7 @@
    KONFIGURASI
    ========================================================= */
 
-const API_URL = 'PASTE_APPS_SCRIPT_WEB_APP_EXEC_URL_DI_SINI';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwbv-G92M5hVR795cNP_pHY3JsMDFVMruHOoRgxtUfRwkTHiStuEyhn3pEngnvcVfzy/exec';
 
 const NIP_KEY = 'absensi_v3_nip';
 const DEV_KEY = 'absensi_v3_device';
