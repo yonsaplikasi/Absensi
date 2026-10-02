@@ -1,277 +1,770 @@
-// ============================================================
-// ABSENSI DINAS X - FRONTEND V2
-// ============================================================
+/* =========================================================
+   KONFIGURASI
+   ========================================================= */
 
-// URL Web App Google Apps Script
-const API_URL = "https://script.google.com/macros/s/AKfycbxfLxZDr31XgKIJhgFgi-mWPGdwpJXQtaW5kulqYFJ-KJm8gNuQc3HMgkunPd8ZiOCF9w/exec";
+const API_URL = 'PASTE_APPS_SCRIPT_WEB_APP_EXEC_URL_DI_SINI';
 
-// Helper mengambil elemen HTML berdasarkan ID
+const NIP_KEY = 'absensi_v3_nip';
+const DEV_KEY = 'absensi_v3_device';
+
+let pending = null;
+
+
+/* =========================================================
+   HELPER ELEMENT
+   ========================================================= */
+
 const $ = (id) => document.getElementById(id);
 
-// Menyimpan data sesi pegawai yang sedang login
-let session = null;
+
+/* =========================================================
+   INITIALIZATION
+   ========================================================= */
+
+document.addEventListener('DOMContentLoaded', init);
+
+async function init() {
+
+  const buttons = [
+    'verifyBtn',
+    'confirmBtn',
+    'backBtn',
+    'gpsBtn',
+    'masukBtn',
+    'keluarBtn',
+    'resetBtn'
+  ];
+
+  buttons.forEach((id) => {
+    $(id).addEventListener('click', () => {
+      handlers[id]();
+    });
+  });
 
 
-// ============================================================
-// API
-// ============================================================
+  // Cek sesi yang tersimpan di browser
+  const nip = localStorage.getItem(NIP_KEY);
+  const deviceId = localStorage.getItem(DEV_KEY);
 
-async function api(payload) {
-    const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-        },
-        body: JSON.stringify(payload)
+  if (!nip || !deviceId) {
+    return showVerify();
+  }
+
+
+  // Validasi sesi ke server
+  try {
+
+    const response = await api({
+      action: 'getSession',
+      nip: nip,
+      deviceId: deviceId
     });
 
-    return await response.json();
+    if (response.ok) {
+
+      showAttendance(response.employee);
+
+    } else {
+
+      localStorage.clear();
+
+      showVerify();
+
+      msg(response.message, 'error');
+    }
+
+  } catch (error) {
+
+    showVerify();
+
+    msg(error.message, 'error');
+  }
 }
 
 
-// ============================================================
-// PESAN / NOTIFIKASI
-// ============================================================
+/* =========================================================
+   EVENT HANDLERS
+   ========================================================= */
 
-function msg(text, success = false) {
-    const element = $("message");
+const handlers = {
 
-    element.textContent = text;
-    element.className = "message show";
-    element.style.background = success
-        ? "#eef7ee"
-        : "#fff0f0";
-}
+  verifyBtn: verifyNip,
+
+  confirmBtn: confirmVerification,
+
+  backBtn: showVerify,
+
+  gpsBtn: checkGps,
+
+  masukBtn: () => attendance('MASUK'),
+
+  keluarBtn: () => attendance('KELUAR'),
+
+  resetBtn: resetSession
+
+};
 
 
-// ============================================================
-// IDENTITAS PERANGKAT
-// ============================================================
+/* =========================================================
+   DEVICE ID
+   ========================================================= */
 
 function device() {
-    let deviceId = localStorage.getItem("dinas_x_device_id");
 
-    if (!deviceId) {
-        deviceId = crypto.randomUUID
-            ? crypto.randomUUID()
-            : "dev-" + Date.now();
+  let deviceId = localStorage.getItem(DEV_KEY);
 
-        localStorage.setItem(
-            "dinas_x_device_id",
-            deviceId
-        );
-    }
+  if (!deviceId) {
 
-    return deviceId;
+    deviceId =
+      'DEV-' +
+      (
+        crypto.randomUUID
+          ? crypto.randomUUID()
+          : Math.random().toString(36).slice(2) + Date.now()
+      );
+
+    localStorage.setItem(DEV_KEY, deviceId);
+  }
+
+  return deviceId;
 }
 
 
-// ============================================================
-// GPS / GEOLOCATION
-// ============================================================
+/* =========================================================
+   VERIFIKASI NIP
+   ========================================================= */
 
-function pos() {
-    return new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-            resolve,
-            reject,
-            {
-                enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 0
-            }
-        );
+async function verifyNip() {
+
+  const nip = $('nip').value.trim();
+
+  if (!nip) {
+    return msg('NIP wajib diisi.', 'error');
+  }
+
+
+  busy(
+    'verifyBtn',
+    true,
+    'Memeriksa...'
+  );
+
+
+  try {
+
+    const response = await api({
+      action: 'verifyNip',
+      nip: nip,
+      deviceId: device()
     });
+
+
+    if (!response.ok) {
+      return msg(response.message, 'error');
+    }
+
+
+    // Simpan data sementara sebelum konfirmasi
+    pending = response.employee;
+
+
+    $('confirmData').innerHTML = rows(pending);
+
+
+    $('verifyView').classList.add('hidden');
+
+    $('confirmView').classList.remove('hidden');
+
+
+  } catch (error) {
+
+    msg(error.message, 'error');
+
+
+  } finally {
+
+    busy(
+      'verifyBtn',
+      false,
+      'VERIFIKASI NIP'
+    );
+  }
 }
 
 
-// ============================================================
-// LOGIN
-// ============================================================
+/* =========================================================
+   KONFIRMASI VERIFIKASI
+   ========================================================= */
 
-async function login() {
-    const nip = $("nip").value.trim();
-    const pin = $("pin").value.trim();
+async function confirmVerification() {
 
-    // Validasi input
-    if (!nip || !pin) {
-        return msg("NIP dan PIN wajib diisi.");
+  if (!pending) {
+    return;
+  }
+
+
+  busy(
+    'confirmBtn',
+    true,
+    'Menyimpan...'
+  );
+
+
+  try {
+
+    const response = await api({
+      action: 'confirmVerification',
+      nip: pending.nip,
+      deviceId: device()
+    });
+
+
+    if (!response.ok) {
+      return msg(response.message, 'error');
     }
 
-    $("loginBtn").disabled = true;
 
-    try {
-        // Kirim data login ke Apps Script
-        const result = await api({
-            action: "login",
-            nip: nip,
-            pin: pin
-        });
+    // Simpan NIP ke browser
+    localStorage.setItem(
+      NIP_KEY,
+      pending.nip
+    );
 
-        // Jika login gagal
-        if (!result.ok) {
-            throw new Error(result.message);
-        }
 
-        // Simpan sesi
-        session = {
-            nip: nip,
-            pin: pin,
-            employee: result.employee
-        };
+    // Tampilkan halaman absensi
+    showAttendance(
+      response.employee || pending
+    );
 
-        // Tampilkan data pegawai
-        $("nama").textContent = result.employee.nama;
-        $("nipView").textContent = result.employee.nip;
-        $("bagian").textContent = result.employee.bagian;
 
-        // Ganti tampilan login ke tampilan pegawai
-        $("loginBox").classList.add("hidden");
-        $("employeeBox").classList.remove("hidden");
+    msg(
+      'Verifikasi berhasil.',
+      'success'
+    );
 
-        msg("Login berhasil.", true);
 
-        // Cek GPS
-        gps();
+  } catch (error) {
 
-    } catch (error) {
-        msg(error.message);
+    msg(error.message, 'error');
 
-    } finally {
-        $("loginBtn").disabled = false;
-    }
+
+  } finally {
+
+    busy(
+      'confirmBtn',
+      false,
+      'KONFIRMASI & AKTIFKAN'
+    );
+  }
 }
 
 
-// ============================================================
-// CEK GPS
-// ============================================================
-
-async function gps() {
-    try {
-        const position = await pos();
-
-        const accuracy = Math.round(
-            position.coords.accuracy
-        );
-
-        $("gpsStatus").textContent =
-            "GPS aktif. Akurasi sekitar " +
-            accuracy +
-            " meter.";
-
-    } catch (error) {
-        $("gpsStatus").textContent =
-            "GPS belum tersedia. Nyalakan Lokasi/GPS pada HP.";
-    }
-}
-
-
-// ============================================================
-// ABSENSI MASUK / KELUAR
-// ============================================================
+/* =========================================================
+   ABSENSI MASUK / KELUAR
+   ========================================================= */
 
 async function attendance(type) {
 
-    // Pastikan pegawai sudah login
-    if (!session) {
-        return msg("Silakan login.");
-    }
+  const nip = localStorage.getItem(NIP_KEY);
 
-    // Nonaktifkan tombol sementara
-    $("masukBtn").disabled = true;
-    $("keluarBtn").disabled = true;
+  const deviceId =
+    localStorage.getItem(DEV_KEY);
 
-    try {
-        // Ambil lokasi GPS
-        const position = await pos();
 
-        // Kirim data absensi ke Apps Script
-        const result = await api({
-            action: "submitAttendance",
+  // Pastikan sesi tersedia
+  if (!nip || !deviceId) {
+    return showVerify();
+  }
 
-            type: type,
 
-            nip: session.nip,
-            pin: session.pin,
+  $('gpsStatus').textContent =
+    'Meminta lokasi GPS terbaru...';
 
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
 
-            deviceId: device(),
+  // Nonaktifkan tombol sementara
+  $('masukBtn').disabled = true;
 
-            browser: navigator.userAgent,
-            os: navigator.platform,
+  $('keluarBtn').disabled = true;
 
-            googleEmail: ""
-        });
 
-        // Jika absensi gagal
-        if (!result.ok) {
-            throw new Error(result.message);
-        }
+  try {
 
-        // Pesan hasil absensi
-        let message =
-            result.message +
-            " Waktu server: " +
-            result.serverTime;
+    // Ambil lokasi terbaru
+    const positionData =
+      await position();
 
-        // Jika sistem memberikan status pemeriksaan
-        if (
-            result.auditStatus ===
-            "PERLU_PEMERIKSAAN"
-        ) {
-            message +=
-                " | " +
-                result.auditCatatan;
-        }
 
-        msg(message, true);
+    // Kirim absensi ke server
+    const response = await api({
 
-    } catch (error) {
-        msg(error.message);
+      action: 'submitAttendance',
 
-    } finally {
-        // Aktifkan kembali tombol
-        $("masukBtn").disabled = false;
-        $("keluarBtn").disabled = false;
-    }
+      type: type,
+
+      nip: nip,
+
+      deviceId: deviceId,
+
+      latitude:
+        positionData.coords.latitude,
+
+      longitude:
+        positionData.coords.longitude,
+
+      accuracy:
+        positionData.coords.accuracy,
+
+      browser:
+        navigator.userAgent,
+
+      os:
+        os()
+
+    });
+
+
+    msg(
+      response.message +
+      (
+        response.serverTime
+          ? ' Waktu server: ' +
+            response.serverTime
+          : ''
+      ),
+      response.ok
+        ? 'success'
+        : 'error'
+    );
+
+
+  } catch (error) {
+
+    msg(
+      error.message,
+      'error'
+    );
+
+
+  } finally {
+
+    // Aktifkan kembali tombol
+    $('masukBtn').disabled = false;
+
+    $('keluarBtn').disabled = false;
+  }
 }
 
 
-// ============================================================
-// LOGOUT
-// ============================================================
+/* =========================================================
+   CEK GPS
+   ========================================================= */
 
-function logout() {
-    // Hapus sesi
-    session = null;
+async function checkGps() {
 
-    // Kosongkan PIN
-    $("pin").value = "";
+  busy(
+    'gpsBtn',
+    true,
+    'Mencari lokasi...'
+  );
 
-    // Kembali ke tampilan login
-    $("employeeBox").classList.add("hidden");
-    $("loginBox").classList.remove("hidden");
 
-    msg("Anda telah keluar.", true);
+  try {
+
+    const positionData =
+      await position();
+
+
+    const accuracy =
+      Math.round(
+        positionData.coords.accuracy
+      );
+
+
+    $('gpsStatus').textContent =
+      'GPS aktif. Akurasi ±' +
+      accuracy +
+      ' meter.';
+
+
+    msg(
+      'Lokasi GPS berhasil diperoleh.',
+      'success'
+    );
+
+
+  } catch (error) {
+
+    $('gpsStatus').textContent =
+      'GPS belum berhasil diperoleh.';
+
+
+    msg(
+      error.message,
+      'error'
+    );
+
+
+  } finally {
+
+    busy(
+      'gpsBtn',
+      false,
+      'CEK / AKTIFKAN GPS'
+    );
+  }
 }
 
 
-// ============================================================
-// EVENT BUTTON
-// ============================================================
+/* =========================================================
+   GEOLOCATION
+   ========================================================= */
 
-$("loginBtn").onclick = login;
+function position() {
 
-$("masukBtn").onclick = () => {
-    attendance("MASUK");
-};
+  return new Promise((resolve, reject) => {
 
-$("keluarBtn").onclick = () => {
-    attendance("KELUAR");
-};
+    // Browser tidak mendukung GPS
+    if (!navigator.geolocation) {
 
-$("logoutBtn").onclick = logout;
+      return reject(
+        Error(
+          'Browser tidak mendukung GPS/lokasi.'
+        )
+      );
+    }
+
+
+    navigator.geolocation.getCurrentPosition(
+
+      resolve,
+
+      (error) => {
+
+        let message;
+
+
+        if (error.code === 1) {
+
+          message =
+            'Izin lokasi ditolak. ' +
+            'Aktifkan izin lokasi.';
+
+        } else if (error.code === 2) {
+
+          message =
+            'Lokasi tidak tersedia. ' +
+            'Aktifkan GPS/Lokasi.';
+
+        } else {
+
+          message =
+            'Permintaan lokasi gagal/timeout.';
+        }
+
+
+        reject(
+          Error(message)
+        );
+      },
+
+      {
+        enableHighAccuracy: true,
+
+        timeout: 15000,
+
+        maximumAge: 0
+      }
+    );
+  });
+}
+
+
+/* =========================================================
+   API REQUEST
+   ========================================================= */
+
+async function api(payload) {
+
+  // Pastikan URL API sudah diisi
+  if (
+    API_URL.includes(
+      'PASTE_APPS_SCRIPT'
+    )
+  ) {
+
+    throw Error(
+      'API_URL belum diisi dengan URL Apps Script /exec.'
+    );
+  }
+
+
+  const response = await fetch(
+    API_URL,
+    {
+      method: 'POST',
+
+      headers: {
+        'Content-Type':
+          'text/plain;charset=utf-8'
+      },
+
+      body: JSON.stringify(payload)
+    }
+  );
+
+
+  const text =
+    await response.text();
+
+
+  // Coba membaca response sebagai JSON
+  try {
+
+    return JSON.parse(text);
+
+  } catch (error) {
+
+    // Apps Script kemungkinan mengembalikan HTML
+    if (
+      text
+        .trim()
+        .startsWith('<')
+    ) {
+
+      throw Error(
+        'Server mengembalikan HTML, bukan JSON. ' +
+        'Periksa URL /exec dan deployment Web App.'
+      );
+    }
+
+
+    throw Error(
+      'Respons server bukan JSON: ' +
+      text.slice(0, 120)
+    );
+  }
+}
+
+
+/* =========================================================
+   TAMPILAN — VERIFIKASI
+   ========================================================= */
+
+function showVerify() {
+
+  $('verifyView')
+    .classList
+    .remove('hidden');
+
+
+  $('confirmView')
+    .classList
+    .add('hidden');
+
+
+  $('attendanceView')
+    .classList
+    .add('hidden');
+}
+
+
+/* =========================================================
+   TAMPILAN — ABSENSI
+   ========================================================= */
+
+function showAttendance(employee) {
+
+  $('verifyView')
+    .classList
+    .add('hidden');
+
+
+  $('confirmView')
+    .classList
+    .add('hidden');
+
+
+  $('attendanceView')
+    .classList
+    .remove('hidden');
+
+
+  $('greeting').textContent =
+    'Halo, ' +
+    employee.nama;
+
+
+  $('sessionData').innerHTML =
+    rows(employee);
+}
+
+
+/* =========================================================
+   DATA PEGAWAI
+   ========================================================= */
+
+function rows(employee) {
+
+  return `
+    <div class="row">
+      <span>NIP</span>
+      <strong>
+        ${esc(employee.nip)}
+      </strong>
+    </div>
+
+    <div class="row">
+      <span>Nama</span>
+      <strong>
+        ${esc(employee.nama)}
+      </strong>
+    </div>
+
+    <div class="row">
+      <span>Bagian</span>
+      <strong>
+        ${esc(employee.bagian)}
+      </strong>
+    </div>
+
+    <div class="row">
+      <span>Jabatan</span>
+      <strong>
+        ${esc(employee.jabatan)}
+      </strong>
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   HTML ESCAPE
+   ========================================================= */
+
+function esc(value) {
+
+  return String(
+    value ?? ''
+  ).replace(
+    /[&<>"']/g,
+    (character) => {
+
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[character];
+
+    }
+  );
+}
+
+
+/* =========================================================
+   BUTTON STATE
+   ========================================================= */
+
+function busy(
+  id,
+  isBusy,
+  text
+) {
+
+  $(id).disabled = isBusy;
+
+  $(id).textContent = text;
+}
+
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+function msg(
+  text,
+  type
+) {
+
+  $('message').textContent =
+    text || '';
+
+
+  $('message').className =
+    'message ' +
+    (type || '');
+}
+
+
+/* =========================================================
+   DETEKSI OPERATING SYSTEM
+   ========================================================= */
+
+function os() {
+
+  const userAgent =
+    navigator.userAgent;
+
+
+  if (/Android/i.test(userAgent)) {
+
+    return 'Android';
+  }
+
+
+  if (
+    /iPhone|iPad|iPod/i
+      .test(userAgent)
+  ) {
+
+    return 'iOS';
+  }
+
+
+  if (/Windows/i.test(userAgent)) {
+
+    return 'Windows';
+  }
+
+
+  if (/Mac OS X/i.test(userAgent)) {
+
+    return 'macOS';
+  }
+
+
+  return 'Unknown';
+}
+
+
+/* =========================================================
+   RESET SESSION
+   ========================================================= */
+
+function resetSession() {
+
+  if (
+    confirm(
+      'Hapus sesi browser ini?'
+    )
+  ) {
+
+    localStorage.removeItem(
+      NIP_KEY
+    );
+
+    localStorage.removeItem(
+      DEV_KEY
+    );
+
+
+    showVerify();
+
+
+    msg(
+      'Sesi dihapus.',
+      'success'
+    );
+  }
+}
