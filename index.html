@@ -1,57 +1,33 @@
 <!doctype html>
 <html lang="id">
-
 <head>
   <meta charset="utf-8">
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1"
   >
-
   <title>Absensi Dinas X V3</title>
-
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
   <main class="app">
-
-    <!-- =====================================================
-         HEADER
-         ===================================================== -->
 
     <header>
       <b>DINAS X</b>
-
       <h1>Absensi Pegawai</h1>
-
       <p>Sistem Absensi V3</p>
     </header>
-
-
-    <!-- =====================================================
-         MESSAGE
-         ===================================================== -->
 
     <section
       id="message"
       class="message hidden"
     ></section>
 
-
-    <!-- =====================================================
-         VERIFIKASI NIP
-         ===================================================== -->
-
     <section
       id="verifyView"
       class="card"
     >
-
       <h2>Verifikasi NIP</h2>
 
       <p>
@@ -67,19 +43,12 @@
       <button id="verifyBtn">
         VERIFIKASI NIP
       </button>
-
     </section>
-
-
-    <!-- =====================================================
-         KONFIRMASI DATA
-         ===================================================== -->
 
     <section
       id="confirmView"
       class="card hidden"
     >
-
       <h2>Konfirmasi Data</h2>
 
       <div id="confirmData"></div>
@@ -99,34 +68,19 @@
       >
         KEMBALI
       </button>
-
     </section>
-
-
-    <!-- =====================================================
-         HALAMAN ABSENSI
-         ===================================================== -->
 
     <section
       id="attendanceView"
       class="hidden"
     >
-
-      <!-- DATA PEGAWAI -->
-
       <div class="card">
-
         <h2 id="greeting"></h2>
 
         <div id="sessionData"></div>
-
       </div>
 
-
-      <!-- GPS / LOKASI -->
-
       <div class="card">
-
         <h3>Lokasi Absensi</h3>
 
         <p id="gpsStatus">
@@ -139,11 +93,7 @@
         >
           CEK / AKTIFKAN GPS
         </button>
-
       </div>
-
-
-      <!-- ABSEN MASUK -->
 
       <button
         id="masukBtn"
@@ -152,9 +102,6 @@
         ABSEN MASUK
       </button>
 
-
-      <!-- ABSEN KELUAR -->
-
       <button
         id="keluarBtn"
         class="keluar"
@@ -162,22 +109,13 @@
         ABSEN KELUAR
       </button>
 
-
-      <!-- RESET SESSION -->
-
       <button
         id="resetBtn"
         class="link"
       >
         Reset sesi browser
       </button>
-
     </section>
-
-
-    <!-- =====================================================
-         FOOTER
-         ===================================================== -->
 
     <footer>
       Waktu dan validasi lokasi diperiksa server.
@@ -185,13 +123,6 @@
 
   </main>
 
-
-  <!-- =======================================================
-       JAVASCRIPT
-       ======================================================= -->
-
   <script src="app.js"></script>
-
 </body>
-
 </html>
