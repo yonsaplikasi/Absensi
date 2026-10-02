@@ -2,10 +2,14 @@
    KONFIGURASI
    ========================================================= */
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbwbv-G92M5hVR795cNP_pHY3JsMDFVMruHOoRgxtUfRwkTHiStuEyhn3pEngnvcVfzy/exec';
+const API_URL =
+  "https://script.google.com/macros/s/AKfycby91KVXpW-y2SN4MLca88a5jYmpb_UbX8G9r1zqo-zJ4u_SdpfKmd8T6yvAykeRRNbS6w/exec";
 
-const NIP_KEY = 'absensi_v3_nip';
-const DEV_KEY = 'absensi_v3_device';
+const NIP_KEY =
+  "absensi_v3_nip";
+
+const DEV_KEY =
+  "absensi_v3_device";
 
 let pending = null;
 
@@ -21,30 +25,42 @@ const $ = (id) => document.getElementById(id);
    INITIALIZATION
    ========================================================= */
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener(
+  "DOMContentLoaded",
+  init
+);
+
 
 async function init() {
 
   const buttons = [
-    'verifyBtn',
-    'confirmBtn',
-    'backBtn',
-    'gpsBtn',
-    'masukBtn',
-    'keluarBtn',
-    'resetBtn'
+    "verifyBtn",
+    "confirmBtn",
+    "backBtn",
+    "gpsBtn",
+    "masukBtn",
+    "keluarBtn",
+    "resetBtn"
   ];
 
+
   buttons.forEach((id) => {
-    $(id).addEventListener('click', () => {
-      handlers[id]();
-    });
+
+    $(id).addEventListener(
+      "click",
+      () => handlers[id]()
+    );
+
   });
 
 
-  // Cek sesi yang tersimpan di browser
-  const nip = localStorage.getItem(NIP_KEY);
-  const deviceId = localStorage.getItem(DEV_KEY);
+  // Cek sesi yang tersimpan
+  const nip =
+    localStorage.getItem(NIP_KEY);
+
+  const deviceId =
+    localStorage.getItem(DEV_KEY);
+
 
   if (!nip || !deviceId) {
     return showVerify();
@@ -55,14 +71,17 @@ async function init() {
   try {
 
     const response = await api({
-      action: 'getSession',
+      action: "getSession",
       nip: nip,
       deviceId: deviceId
     });
 
+
     if (response.ok) {
 
-      showAttendance(response.employee);
+      showAttendance(
+        response.employee
+      );
 
     } else {
 
@@ -70,14 +89,21 @@ async function init() {
 
       showVerify();
 
-      msg(response.message, 'error');
+      msg(
+        response.message,
+        "error"
+      );
     }
+
 
   } catch (error) {
 
     showVerify();
 
-    msg(error.message, 'error');
+    msg(
+      error.message,
+      "error"
+    );
   }
 }
 
@@ -88,19 +114,26 @@ async function init() {
 
 const handlers = {
 
-  verifyBtn: verifyNip,
+  verifyBtn:
+    verifyNip,
 
-  confirmBtn: confirmVerification,
+  confirmBtn:
+    confirmVerification,
 
-  backBtn: showVerify,
+  backBtn:
+    showVerify,
 
-  gpsBtn: checkGps,
+  gpsBtn:
+    checkGps,
 
-  masukBtn: () => attendance('MASUK'),
+  masukBtn:
+    () => attendance("MASUK"),
 
-  keluarBtn: () => attendance('KELUAR'),
+  keluarBtn:
+    () => attendance("KELUAR"),
 
-  resetBtn: resetSession
+  resetBtn:
+    resetSession
 
 };
 
@@ -111,20 +144,30 @@ const handlers = {
 
 function device() {
 
-  let deviceId = localStorage.getItem(DEV_KEY);
+  let deviceId =
+    localStorage.getItem(DEV_KEY);
+
 
   if (!deviceId) {
 
     deviceId =
-      'DEV-' +
+      "DEV-" +
       (
         crypto.randomUUID
           ? crypto.randomUUID()
-          : Math.random().toString(36).slice(2) + Date.now()
+          : Math.random()
+              .toString(36)
+              .slice(2) +
+            Date.now()
       );
 
-    localStorage.setItem(DEV_KEY, deviceId);
+
+    localStorage.setItem(
+      DEV_KEY,
+      deviceId
+    );
   }
+
 
   return deviceId;
 }
@@ -136,57 +179,81 @@ function device() {
 
 async function verifyNip() {
 
-  const nip = $('nip').value.trim();
+  const nip =
+    $("nip").value.trim();
+
 
   if (!nip) {
-    return msg('NIP wajib diisi.', 'error');
+
+    return msg(
+      "NIP wajib diisi.",
+      "error"
+    );
   }
 
 
   busy(
-    'verifyBtn',
+    "verifyBtn",
     true,
-    'Memeriksa...'
+    "Memeriksa..."
   );
 
 
   try {
 
     const response = await api({
-      action: 'verifyNip',
+
+      action: "verifyNip",
+
       nip: nip,
+
       deviceId: device()
+
     });
 
 
     if (!response.ok) {
-      return msg(response.message, 'error');
+
+      return msg(
+        response.message,
+        "error"
+      );
     }
 
 
-    // Simpan data sementara sebelum konfirmasi
-    pending = response.employee;
+    // Simpan data sementara
+    pending =
+      response.employee;
 
 
-    $('confirmData').innerHTML = rows(pending);
+    $("confirmData").innerHTML =
+      rows(pending);
 
 
-    $('verifyView').classList.add('hidden');
+    $("verifyView")
+      .classList
+      .add("hidden");
 
-    $('confirmView').classList.remove('hidden');
+
+    $("confirmView")
+      .classList
+      .remove("hidden");
 
 
   } catch (error) {
 
-    msg(error.message, 'error');
+    msg(
+      error.message,
+      "error"
+    );
 
 
   } finally {
 
     busy(
-      'verifyBtn',
+      "verifyBtn",
       false,
-      'VERIFIKASI NIP'
+      "VERIFIKASI NIP"
     );
   }
 }
@@ -204,27 +271,38 @@ async function confirmVerification() {
 
 
   busy(
-    'confirmBtn',
+    "confirmBtn",
     true,
-    'Menyimpan...'
+    "Menyimpan..."
   );
 
 
   try {
 
     const response = await api({
-      action: 'confirmVerification',
-      nip: pending.nip,
-      deviceId: device()
+
+      action:
+        "confirmVerification",
+
+      nip:
+        pending.nip,
+
+      deviceId:
+        device()
+
     });
 
 
     if (!response.ok) {
-      return msg(response.message, 'error');
+
+      return msg(
+        response.message,
+        "error"
+      );
     }
 
 
-    // Simpan NIP ke browser
+    // Simpan NIP
     localStorage.setItem(
       NIP_KEY,
       pending.nip
@@ -233,27 +311,31 @@ async function confirmVerification() {
 
     // Tampilkan halaman absensi
     showAttendance(
-      response.employee || pending
+      response.employee ||
+      pending
     );
 
 
     msg(
-      'Verifikasi berhasil.',
-      'success'
+      "Verifikasi berhasil.",
+      "success"
     );
 
 
   } catch (error) {
 
-    msg(error.message, 'error');
+    msg(
+      error.message,
+      "error"
+    );
 
 
   } finally {
 
     busy(
-      'confirmBtn',
+      "confirmBtn",
       false,
-      'KONFIRMASI & AKTIFKAN'
+      "KONFIRMASI & AKTIFKAN"
     );
   }
 }
@@ -265,7 +347,8 @@ async function confirmVerification() {
 
 async function attendance(type) {
 
-  const nip = localStorage.getItem(NIP_KEY);
+  const nip =
+    localStorage.getItem(NIP_KEY);
 
   const deviceId =
     localStorage.getItem(DEV_KEY);
@@ -273,18 +356,21 @@ async function attendance(type) {
 
   // Pastikan sesi tersedia
   if (!nip || !deviceId) {
+
     return showVerify();
   }
 
 
-  $('gpsStatus').textContent =
-    'Meminta lokasi GPS terbaru...';
+  $("gpsStatus").textContent =
+    "Meminta lokasi GPS terbaru...";
 
 
   // Nonaktifkan tombol sementara
-  $('masukBtn').disabled = true;
+  $("masukBtn").disabled =
+    true;
 
-  $('keluarBtn').disabled = true;
+  $("keluarBtn").disabled =
+    true;
 
 
   try {
@@ -294,16 +380,20 @@ async function attendance(type) {
       await position();
 
 
-    // Kirim absensi ke server
+    // Kirim data ke server
     const response = await api({
 
-      action: 'submitAttendance',
+      action:
+        "submitAttendance",
 
-      type: type,
+      type:
+        type,
 
-      nip: nip,
+      nip:
+        nip,
 
-      deviceId: deviceId,
+      deviceId:
+        deviceId,
 
       latitude:
         positionData.coords.latitude,
@@ -323,17 +413,20 @@ async function attendance(type) {
     });
 
 
+    const serverTime =
+      response.serverTime
+        ? " Waktu server: " +
+          response.serverTime
+        : "";
+
+
     msg(
       response.message +
-      (
-        response.serverTime
-          ? ' Waktu server: ' +
-            response.serverTime
-          : ''
-      ),
+      serverTime,
+
       response.ok
-        ? 'success'
-        : 'error'
+        ? "success"
+        : "error"
     );
 
 
@@ -341,16 +434,18 @@ async function attendance(type) {
 
     msg(
       error.message,
-      'error'
+      "error"
     );
 
 
   } finally {
 
     // Aktifkan kembali tombol
-    $('masukBtn').disabled = false;
+    $("masukBtn").disabled =
+      false;
 
-    $('keluarBtn').disabled = false;
+    $("keluarBtn").disabled =
+      false;
   }
 }
 
@@ -362,9 +457,9 @@ async function attendance(type) {
 async function checkGps() {
 
   busy(
-    'gpsBtn',
+    "gpsBtn",
     true,
-    'Mencari lokasi...'
+    "Mencari lokasi..."
   );
 
 
@@ -380,36 +475,36 @@ async function checkGps() {
       );
 
 
-    $('gpsStatus').textContent =
-      'GPS aktif. Akurasi ±' +
+    $("gpsStatus").textContent =
+      "GPS aktif. Akurasi ±" +
       accuracy +
-      ' meter.';
+      " meter.";
 
 
     msg(
-      'Lokasi GPS berhasil diperoleh.',
-      'success'
+      "Lokasi GPS berhasil diperoleh.",
+      "success"
     );
 
 
   } catch (error) {
 
-    $('gpsStatus').textContent =
-      'GPS belum berhasil diperoleh.';
+    $("gpsStatus").textContent =
+      "GPS belum berhasil diperoleh.";
 
 
     msg(
       error.message,
-      'error'
+      "error"
     );
 
 
   } finally {
 
     busy(
-      'gpsBtn',
+      "gpsBtn",
       false,
-      'CEK / AKTIFKAN GPS'
+      "CEK / AKTIFKAN GPS"
     );
   }
 }
@@ -421,61 +516,69 @@ async function checkGps() {
 
 function position() {
 
-  return new Promise((resolve, reject) => {
+  return new Promise(
+    (resolve, reject) => {
 
-    // Browser tidak mendukung GPS
-    if (!navigator.geolocation) {
+      // Browser tidak mendukung GPS
+      if (!navigator.geolocation) {
 
-      return reject(
-        Error(
-          'Browser tidak mendukung GPS/lokasi.'
-        )
-      );
-    }
-
-
-    navigator.geolocation.getCurrentPosition(
-
-      resolve,
-
-      (error) => {
-
-        let message;
+        return reject(
+          Error(
+            "Browser tidak mendukung GPS/lokasi."
+          )
+        );
+      }
 
 
-        if (error.code === 1) {
+      navigator.geolocation.getCurrentPosition(
 
-          message =
-            'Izin lokasi ditolak. ' +
-            'Aktifkan izin lokasi.';
+        resolve,
 
-        } else if (error.code === 2) {
+        (error) => {
 
-          message =
-            'Lokasi tidak tersedia. ' +
-            'Aktifkan GPS/Lokasi.';
+          let message;
 
-        } else {
 
-          message =
-            'Permintaan lokasi gagal/timeout.';
+          if (error.code === 1) {
+
+            message =
+              "Izin lokasi ditolak. " +
+              "Aktifkan izin lokasi.";
+
+          } else if (error.code === 2) {
+
+            message =
+              "Lokasi tidak tersedia. " +
+              "Aktifkan GPS/Lokasi.";
+
+          } else {
+
+            message =
+              "Permintaan lokasi gagal/timeout.";
+          }
+
+
+          reject(
+            Error(message)
+          );
+        },
+
+
+        {
+          enableHighAccuracy:
+            true,
+
+          timeout:
+            15000,
+
+          maximumAge:
+            0
         }
 
+      );
 
-        reject(
-          Error(message)
-        );
-      },
-
-      {
-        enableHighAccuracy: true,
-
-        timeout: 15000,
-
-        maximumAge: 0
-      }
-    );
-  });
+    }
+  );
 }
 
 
@@ -485,61 +588,64 @@ function position() {
 
 async function api(payload) {
 
-  // Pastikan URL API sudah diisi
+  // Pastikan API URL sudah diisi
   if (
     API_URL.includes(
-      'PASTE_APPS_SCRIPT'
+      "PASTE_APPS_SCRIPT"
     )
   ) {
 
     throw Error(
-      'API_URL belum diisi dengan URL Apps Script /exec.'
+      "API_URL belum diisi dengan URL Apps Script /exec."
     );
   }
 
 
-  const response = await fetch(
-    API_URL,
-    {
-      method: 'POST',
+  const response =
+    await fetch(
+      API_URL,
+      {
+        method: "POST",
 
-      headers: {
-        'Content-Type':
-          'text/plain;charset=utf-8'
-      },
+        headers: {
+          "Content-Type":
+            "text/plain;charset=utf-8"
+        },
 
-      body: JSON.stringify(payload)
-    }
-  );
+        body:
+          JSON.stringify(payload)
+      }
+    );
 
 
   const text =
     await response.text();
 
 
-  // Coba membaca response sebagai JSON
+  // Parse JSON
   try {
 
     return JSON.parse(text);
 
   } catch (error) {
 
-    // Apps Script kemungkinan mengembalikan HTML
+    // Server mengembalikan HTML
     if (
       text
         .trim()
-        .startsWith('<')
+        .startsWith("<")
     ) {
 
       throw Error(
-        'Server mengembalikan HTML, bukan JSON. ' +
-        'Periksa URL /exec dan deployment Web App.'
+        "Server mengembalikan HTML, bukan JSON. " +
+        "Periksa URL /exec dan deployment Web App."
       );
     }
 
 
+    // Response bukan JSON
     throw Error(
-      'Respons server bukan JSON: ' +
+      "Respons server bukan JSON: " +
       text.slice(0, 120)
     );
   }
@@ -552,19 +658,19 @@ async function api(payload) {
 
 function showVerify() {
 
-  $('verifyView')
+  $("verifyView")
     .classList
-    .remove('hidden');
+    .remove("hidden");
 
 
-  $('confirmView')
+  $("confirmView")
     .classList
-    .add('hidden');
+    .add("hidden");
 
 
-  $('attendanceView')
+  $("attendanceView")
     .classList
-    .add('hidden');
+    .add("hidden");
 }
 
 
@@ -574,27 +680,27 @@ function showVerify() {
 
 function showAttendance(employee) {
 
-  $('verifyView')
+  $("verifyView")
     .classList
-    .add('hidden');
+    .add("hidden");
 
 
-  $('confirmView')
+  $("confirmView")
     .classList
-    .add('hidden');
+    .add("hidden");
 
 
-  $('attendanceView')
+  $("attendanceView")
     .classList
-    .remove('hidden');
+    .remove("hidden");
 
 
-  $('greeting').textContent =
-    'Halo, ' +
+  $("greeting").textContent =
+    "Halo, " +
     employee.nama;
 
 
-  $('sessionData').innerHTML =
+  $("sessionData").innerHTML =
     rows(employee);
 }
 
@@ -644,17 +750,28 @@ function rows(employee) {
 function esc(value) {
 
   return String(
-    value ?? ''
+    value ?? ""
   ).replace(
     /[&<>"']/g,
     (character) => {
 
       return {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
+
+        "&":
+          "&amp;",
+
+        "<":
+          "&lt;",
+
+        ">":
+          "&gt;",
+
+        "\"":
+          "&quot;",
+
+        "'":
+          "&#39;"
+
       }[character];
 
     }
@@ -672,9 +789,11 @@ function busy(
   text
 ) {
 
-  $(id).disabled = isBusy;
+  $(id).disabled =
+    isBusy;
 
-  $(id).textContent = text;
+  $(id).textContent =
+    text;
 }
 
 
@@ -687,13 +806,13 @@ function msg(
   type
 ) {
 
-  $('message').textContent =
-    text || '';
+  $("message").textContent =
+    text || "";
 
 
-  $('message').className =
-    'message ' +
-    (type || '');
+  $("message").className =
+    "message " +
+    (type || "");
 }
 
 
@@ -707,34 +826,47 @@ function os() {
     navigator.userAgent;
 
 
-  if (/Android/i.test(userAgent)) {
+  if (
+    /Android/i.test(
+      userAgent
+    )
+  ) {
 
-    return 'Android';
+    return "Android";
   }
 
 
   if (
-    /iPhone|iPad|iPod/i
-      .test(userAgent)
+    /iPhone|iPad|iPod/i.test(
+      userAgent
+    )
   ) {
 
-    return 'iOS';
+    return "iOS";
   }
 
 
-  if (/Windows/i.test(userAgent)) {
+  if (
+    /Windows/i.test(
+      userAgent
+    )
+  ) {
 
-    return 'Windows';
+    return "Windows";
   }
 
 
-  if (/Mac OS X/i.test(userAgent)) {
+  if (
+    /Mac OS X/i.test(
+      userAgent
+    )
+  ) {
 
-    return 'macOS';
+    return "macOS";
   }
 
 
-  return 'Unknown';
+  return "Unknown";
 }
 
 
@@ -746,7 +878,7 @@ function resetSession() {
 
   if (
     confirm(
-      'Hapus sesi browser ini?'
+      "Hapus sesi browser ini?"
     )
   ) {
 
@@ -763,8 +895,8 @@ function resetSession() {
 
 
     msg(
-      'Sesi dihapus.',
-      'success'
+      "Sesi dihapus.",
+      "success"
     );
   }
 }
