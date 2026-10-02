@@ -1,179 +1,197 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 
 <head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
 
-    <title>Absensi Pegawai - Dinas X</title>
+  <title>Absensi Dinas X V3</title>
 
-    <link rel="stylesheet" href="style.css">
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 </head>
 
 <body>
 
-    <main class="container">
+  <main class="app">
 
-        <section class="card">
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
 
-            <!-- ==================================================
-                 JUDUL
-            =================================================== -->
+    <header>
+      <b>DINAS X</b>
 
-            <h1>ABSENSI PEGAWAI</h1>
-            <p class="sub">DINAS X</p>
+      <h1>Absensi Pegawai</h1>
 
-
-            <!-- ==================================================
-                 FORM LOGIN
-            =================================================== -->
-
-            <div id="loginBox">
-
-                <label for="nip">NIP</label>
-
-                <input
-                    id="nip"
-                    type="text"
-                    inputmode="numeric"
-                    placeholder="Masukkan NIP"
-                >
+      <p>Sistem Absensi V3</p>
+    </header>
 
 
-                <label for="pin">PIN</label>
+    <!-- =====================================================
+         MESSAGE
+         ===================================================== -->
 
-                <input
-                    id="pin"
-                    type="password"
-                    inputmode="numeric"
-                    maxlength="8"
-                    placeholder="Masukkan PIN"
-                >
-
-
-                <button
-                    id="loginBtn"
-                    class="primary"
-                    type="button"
-                >
-                    MASUK
-                </button>
-
-            </div>
+    <section
+      id="message"
+      class="message hidden"
+    ></section>
 
 
-            <!-- ==================================================
-                 DATA PEGAWAI
-            =================================================== -->
+    <!-- =====================================================
+         VERIFIKASI NIP
+         ===================================================== -->
 
-            <div id="employeeBox" class="hidden">
+    <section
+      id="verifyView"
+      class="card"
+    >
 
-                <div class="identity">
+      <h2>Verifikasi NIP</h2>
 
-                    <div>
-                        <small>Nama</small>
-                        <strong id="nama"></strong>
-                    </div>
+      <p>
+        Masukkan NIP satu kali pada HP/browser ini.
+      </p>
 
-                    <div>
-                        <small>NIP</small>
-                        <strong id="nipView"></strong>
-                    </div>
+      <input
+        id="nip"
+        inputmode="numeric"
+        placeholder="Masukkan NIP"
+      >
 
-                    <div>
-                        <small>Bagian</small>
-                        <strong id="bagian"></strong>
-                    </div>
+      <button id="verifyBtn">
+        VERIFIKASI NIP
+      </button>
 
-                </div>
-
-
-                <!-- ==================================================
-                     STATUS GPS
-                =================================================== -->
-
-                <div
-                    id="gpsStatus"
-                    class="status"
-                >
-                    Memeriksa GPS...
-                </div>
+    </section>
 
 
-                <!-- ==================================================
-                     TOMBOL ABSENSI
-                =================================================== -->
+    <!-- =====================================================
+         KONFIRMASI DATA
+         ===================================================== -->
 
-                <button
-                    id="masukBtn"
-                    class="primary"
-                    type="button"
-                >
-                    ABSEN MASUK
-                </button>
+    <section
+      id="confirmView"
+      class="card hidden"
+    >
 
-                <button
-                    id="keluarBtn"
-                    class="secondary"
-                    type="button"
-                >
-                    ABSEN KELUAR
-                </button>
+      <h2>Konfirmasi Data</h2>
 
+      <div id="confirmData"></div>
 
-                <!-- ==================================================
-                     LOGOUT
-                =================================================== -->
+      <p class="warning">
+        Pastikan data benar. Setelah dikonfirmasi,
+        perangkat ini terikat dengan NIP tersebut.
+      </p>
 
-                <button
-                    id="logoutBtn"
-                    class="linkbtn"
-                    type="button"
-                >
-                    Keluar dari akun
-                </button>
+      <button id="confirmBtn">
+        KONFIRMASI & AKTIFKAN
+      </button>
 
-            </div>
+      <button
+        id="backBtn"
+        class="secondary"
+      >
+        KEMBALI
+      </button>
+
+    </section>
 
 
-            <!-- ==================================================
-                 PESAN / NOTIFIKASI
-            =================================================== -->
+    <!-- =====================================================
+         HALAMAN ABSENSI
+         ===================================================== -->
 
-            <div
-                id="message"
-                class="message"
-            ></div>
+    <section
+      id="attendanceView"
+      class="hidden"
+    >
 
+      <!-- DATA PEGAWAI -->
 
-            <!-- ==================================================
-                 INFORMASI KEAMANAN
-            =================================================== -->
+      <div class="card">
 
-            <div class="security">
+        <h2 id="greeting"></h2>
 
-                <b>Keamanan:</b>
+        <div id="sessionData"></div>
 
-                NIP + PIN memastikan identitas.
-                Email Google dan Device ID hanya audit.
-
-            </div>
-
-        </section>
-
-    </main>
+      </div>
 
 
-    <!-- ========================================================
-         JAVASCRIPT
-    ========================================================= -->
+      <!-- GPS / LOKASI -->
 
-    <script src="app.js"></script>
+      <div class="card">
+
+        <h3>Lokasi Absensi</h3>
+
+        <p id="gpsStatus">
+          Lokasi belum diperiksa.
+        </p>
+
+        <button
+          id="gpsBtn"
+          class="secondary"
+        >
+          CEK / AKTIFKAN GPS
+        </button>
+
+      </div>
+
+
+      <!-- ABSEN MASUK -->
+
+      <button
+        id="masukBtn"
+        class="masuk"
+      >
+        ABSEN MASUK
+      </button>
+
+
+      <!-- ABSEN KELUAR -->
+
+      <button
+        id="keluarBtn"
+        class="keluar"
+      >
+        ABSEN KELUAR
+      </button>
+
+
+      <!-- RESET SESSION -->
+
+      <button
+        id="resetBtn"
+        class="link"
+      >
+        Reset sesi browser
+      </button>
+
+    </section>
+
+
+    <!-- =====================================================
+         FOOTER
+         ===================================================== -->
+
+    <footer>
+      Waktu dan validasi lokasi diperiksa server.
+    </footer>
+
+  </main>
+
+
+  <!-- =======================================================
+       JAVASCRIPT
+       ======================================================= -->
+
+  <script src="app.js"></script>
 
 </body>
 
 </html>
-
