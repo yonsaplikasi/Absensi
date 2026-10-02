@@ -15,6 +15,10 @@ body {
   padding: 20px 16px;
 }
 
+/* =========================
+   HEADER
+   ========================= */
+
 header {
   padding: 8px 4px 18px;
 }
@@ -28,6 +32,10 @@ header p {
   color: #66717d;
 }
 
+/* =========================
+   CARD
+   ========================= */
+
 .card {
   background: #fff;
   border: 1px solid #e0e5e9;
@@ -37,14 +45,32 @@ header p {
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
 }
 
-input {
+/* =========================
+   INPUT & TEXTAREA
+   ========================= */
+
+input,
+textarea {
   width: 100%;
-  height: 50px;
   border: 1px solid #cbd2d8;
   border-radius: 10px;
-  padding: 0 14px;
-  font-size: 17px;
+  padding: 12px 14px;
+  font-size: 16px;
+  font-family: inherit;
 }
+
+input {
+  height: 50px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 95px;
+}
+
+/* =========================
+   BUTTON
+   ========================= */
 
 button {
   width: 100%;
@@ -57,6 +83,11 @@ button {
   cursor: pointer;
   background: #263746;
   color: #fff;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .secondary {
@@ -74,11 +105,9 @@ button {
   font-size: 18px;
 }
 
-.link {
-  background: transparent;
-  color: #66717d;
-  font-size: 13px;
-}
+/* =========================
+   MESSAGE
+   ========================= */
 
 .message {
   padding: 12px;
@@ -99,11 +128,19 @@ button {
   display: none !important;
 }
 
+/* =========================
+   WARNING
+   ========================= */
+
 .warning {
   background: #fff8df;
   padding: 11px;
   border-radius: 10px;
 }
+
+/* =========================
+   EMPLOYEE DATA
+   ========================= */
 
 .row {
   display: flex;
@@ -120,6 +157,161 @@ button {
 .row strong {
   text-align: right;
 }
+
+/* =========================
+   MENU LAYANAN
+   ========================= */
+
+.menu-card {
+  margin-top: 18px;
+}
+
+.menu-card h2 {
+  margin-top: 0;
+}
+
+.service-box {
+  border: 1px solid #e2e6e9;
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 12px;
+  background: #fafbfc;
+}
+
+.service-box h3 {
+  margin: 0 0 7px;
+}
+
+.service-box p {
+  font-size: 14px;
+  color: #65717b;
+  line-height: 1.45;
+}
+
+/* =========================
+   REQUEST MESSAGE
+   ========================= */
+
+.request-message {
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 12px;
+  text-align: center;
+  font-weight: 700;
+  background: #eef5ff;
+}
+
+.request-message.error {
+  background: #fff0ee;
+}
+
+.request-message.success {
+  background: #edf8f1;
+}
+
+/* =========================
+   REQUEST HISTORY
+   ========================= */
+
+.request-history {
+  margin-top: 18px;
+}
+
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.history-head h3 {
+  margin: 0;
+}
+
+.small-btn {
+  width: auto;
+  min-height: 38px;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.request-item {
+  border: 1px solid #e1e6ea;
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 10px;
+  background: #fff;
+}
+
+.request-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.request-top span {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.request-item small,
+.muted {
+  color: #727d86;
+}
+
+.request-item p {
+  margin: 8px 0;
+  line-height: 1.45;
+}
+
+.note {
+  background: #f5f7f8;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.download {
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+  padding: 11px;
+  border-radius: 9px;
+  background: #263746;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* =========================
+   ATTENDANCE MESSAGE
+   ========================= */
+
+.attendance-message {
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 10px;
+  margin-bottom: 14px;
+  background: #eef5ff;
+  text-align: center;
+  font-weight: 700;
+}
+
+.attendance-message.error {
+  background: #fff0ee;
+}
+
+.attendance-message.success {
+  background: #edf8f1;
+}
+
+/* =========================
+   FOOTER
+   ========================= */
 
 footer {
   text-align: center;
