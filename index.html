@@ -6,7 +6,7 @@
     name="viewport"
     content="width=device-width, initial-scale=1"
   >
-  <title>Absensi Dinas X V3</title>
+  <title>Absensi Dinas X V4</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -16,7 +16,7 @@
     <header>
       <b>DINAS X</b>
       <h1>Absensi Pegawai</h1>
-      <p>Sistem Absensi V3</p>
+      <p>Sistem Absensi V4</p>
     </header>
 
     <section
@@ -24,6 +24,7 @@
       class="message hidden"
     ></section>
 
+    <!-- VERIFIKASI NIP -->
     <section
       id="verifyView"
       class="card"
@@ -45,6 +46,7 @@
       </button>
     </section>
 
+    <!-- KONFIRMASI DATA -->
     <section
       id="confirmView"
       class="card hidden"
@@ -70,16 +72,20 @@
       </button>
     </section>
 
+    <!-- HALAMAN ABSENSI -->
     <section
       id="attendanceView"
       class="hidden"
     >
+
+      <!-- DATA PEGAWAI -->
       <div class="card">
         <h2 id="greeting"></h2>
 
         <div id="sessionData"></div>
       </div>
 
+      <!-- LOKASI ABSENSI -->
       <div class="card">
         <h3>Lokasi Absensi</h3>
 
@@ -95,6 +101,7 @@
         </button>
       </div>
 
+      <!-- TOMBOL ABSENSI -->
       <button
         id="masukBtn"
         class="masuk"
@@ -109,12 +116,88 @@
         ABSEN KELUAR
       </button>
 
-      <button
-        id="resetBtn"
-        class="link"
-      >
-        Reset sesi browser
-      </button>
+      <!-- PESAN ABSENSI -->
+      <section
+        id="attendanceMessage"
+        class="attendance-message hidden"
+      ></section>
+
+      <!-- MENU LAYANAN -->
+      <div class="card menu-card">
+
+        <h2>Menu Layanan</h2>
+
+        <!-- IZIN -->
+        <div class="service-box">
+          <h3>Izin Tidak Masuk</h3>
+
+          <p>
+            Isi alasan izin. Permohonan akan berstatus
+            <b>Menunggu ACC Atasan</b>.
+          </p>
+
+          <textarea
+            id="izinKeterangan"
+            rows="4"
+            placeholder="Tulis alasan izin secara manual..."
+          ></textarea>
+
+          <button id="izinBtn">
+            AJUKAN IZIN
+          </button>
+        </div>
+
+        <!-- DINAS LUAR -->
+        <div class="service-box">
+          <h3>Dinas Luar (DL)</h3>
+
+          <p>
+            Isi tujuan DL. Setelah surat dibuat dan
+            diunggah admin/bagian terkait, tombol
+            download akan muncul.
+          </p>
+
+          <textarea
+            id="dlTujuan"
+            rows="4"
+            placeholder="Tulis tujuan dinas luar secara manual..."
+          ></textarea>
+
+          <button id="dlBtn">
+            AJUKAN DINAS LUAR
+          </button>
+        </div>
+
+        <!-- PESAN PERMOHONAN -->
+        <section
+          id="requestMessage"
+          class="request-message hidden"
+        ></section>
+
+        <!-- RIWAYAT PERMOHONAN -->
+        <div class="request-history">
+
+          <div class="history-head">
+            <h3>Riwayat Permohonan</h3>
+
+            <button
+              id="refreshRequestsBtn"
+              class="small-btn"
+            >
+              REFRESH
+            </button>
+          </div>
+
+          <div id="requestList">
+            <p class="muted">
+              Belum ada permohonan.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
     </section>
 
     <footer>
