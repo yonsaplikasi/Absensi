@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbxA6RXsBXFNSHNRybMeYkFzNpAx6UJ0z6kKWNNpRtTd8Xki74EelHQJx1Q-3aNcpkPQVA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzkhGZymVAIQh4DKxtM1AvTarDZCqqyGb2PftUtSfYVlHl725k9SiFh5FiW1Twrutz6yw/exec";
 const NIP_KEY = "absensi_v3_nip";
 const DEV_KEY = "absensi_v3_device";
 const VERIFIED_KEY = "absensi_v3_verified";
@@ -18,15 +18,23 @@ async function init() {
     "gpsBtn",
     "masukBtn",
     "keluarBtn",
-    "resetBtn"
+    "izinBtn",
+    "dlBtn",
+    "refreshRequestsBtn"
   ].forEach(id => {
-    $(id).addEventListener("click", () => handlers[id]());
+    const element = $(id);
+
+    if (element) {
+      element.addEventListener(
+        "click",
+        () => handlers[id]()
+      );
+    }
   });
 
   const nip = localStorage.getItem(NIP_KEY);
   const deviceId = localStorage.getItem(DEV_KEY);
 
-  // Belum pernah verifikasi di browser/perangkat ini.
   if (!nip || !deviceId) {
     showVerify();
     return;
@@ -42,22 +50,22 @@ async function init() {
     if (result.ok) {
       saveSession(result.employee);
       showAttendance(result.employee);
+      loadRequests();
       return;
     }
 
-    // Hanya hapus sesi jika server secara tegas menyatakan sesi tidak valid.
     clearSession();
     showVerify();
     msg(result.message, "error");
   } catch (error) {
-    // Jangan menghapus sesi hanya karena koneksi/API sedang bermasalah.
     const cachedEmployee = loadCachedEmployee();
 
     if (cachedEmployee) {
       showAttendance(cachedEmployee);
+      loadRequests();
 
       msg(
-        "Sesi tersimpan. Server belum dapat dihubungi, coba lagi jika ingin melakukan absensi.",
+        "Sesi tersimpan. Server belum dapat dihubungi, coba lagi.",
         "error"
       );
     } else {
@@ -74,7 +82,9 @@ const handlers = {
   gpsBtn: checkGps,
   masukBtn: () => attendance("MASUK"),
   keluarBtn: () => attendance("KELUAR"),
-  resetBtn: resetSession
+  izinBtn: () => submitRequest("IZIN"),
+  dlBtn: () => submitRequest("DL"),
+  refreshRequestsBtn: loadRequests
 };
 
 function device() {
@@ -86,10 +96,14 @@ function device() {
       (
         crypto.randomUUID
           ? crypto.randomUUID()
-          : Math.random().toString(36).slice(2) + Date.now()
+          : Math.random().toString(36).slice(2) +
+            Date.now()
       );
 
-    localStorage.setItem(DEV_KEY, deviceId);
+    localStorage.setItem(
+      DEV_KEY,
+      deviceId
+    );
   }
 
   return deviceId;
@@ -99,10 +113,17 @@ async function verifyNip() {
   const nip = $("nip").value.trim();
 
   if (!nip) {
-    return msg("NIP wajib diisi.", "error");
+    return msg(
+      "NIP wajib diisi.",
+      "error"
+    );
   }
 
-  busy("verifyBtn", true, "Memeriksa...");
+  busy(
+    "verifyBtn",
+    true,
+    "Memeriksa..."
+  );
 
   try {
     const result = await api({
@@ -112,17 +133,27 @@ async function verifyNip() {
     });
 
     if (!result.ok) {
-      return msg(result.message, "error");
+      return msg(
+        result.message,
+        "error"
+      );
     }
 
     pending = result.employee;
 
-    $("confirmData").innerHTML = rows(pending);
+    $("confirmData").innerHTML =
+      rows(pending);
 
-    $("verifyView").classList.add("hidden");
-    $("confirmView").classList.remove("hidden");
+    $("verifyView")
+      .classList.add("hidden");
+
+    $("confirmView")
+      .classList.remove("hidden");
   } catch (error) {
-    msg(error.message, "error");
+    msg(
+      error.message,
+      "error"
+    );
   } finally {
     busy(
       "verifyBtn",
@@ -133,9 +164,7 @@ async function verifyNip() {
 }
 
 async function confirmVerification() {
-  if (!pending) {
-    return;
-  }
+  if (!pending) return;
 
   busy(
     "confirmBtn",
@@ -151,20 +180,28 @@ async function confirmVerification() {
     });
 
     if (!result.ok) {
-      return msg(result.message, "error");
+      return msg(
+        result.message,
+        "error"
+      );
     }
 
-    const employee = result.employee || pending;
+    const employee =
+      result.employee || pending;
 
     saveSession(employee);
     showAttendance(employee);
+    loadRequests();
 
     msg(
       "Verifikasi berhasil.",
       "success"
     );
   } catch (error) {
-    msg(error.message, "error");
+    msg(
+      error.message,
+      "error"
+    );
   } finally {
     busy(
       "confirmBtn",
@@ -197,9 +234,10 @@ function saveSession(employee) {
 
 function loadCachedEmployee() {
   try {
-    const raw = localStorage.getItem(
-      EMPLOYEE_KEY
-    );
+    const raw =
+      localStorage.getItem(
+        EMPLOYEE_KEY
+      );
 
     return raw
       ? JSON.parse(raw)
@@ -219,8 +257,11 @@ function clearSession() {
 }
 
 async function attendance(type) {
-  const nip = localStorage.getItem(NIP_KEY);
-  const deviceId = localStorage.getItem(DEV_KEY);
+  const nip =
+    localStorage.getItem(NIP_KEY);
+
+  const deviceId =
+    localStorage.getItem(DEV_KEY);
 
   if (!nip || !deviceId) {
     return showVerify();
@@ -233,25 +274,31 @@ async function attendance(type) {
   $("keluarBtn").disabled = true;
 
   try {
-    const positionData = await position();
+    const positionData =
+      await position();
 
     const result = await api({
       action: "submitAttendance",
       type,
       nip,
       deviceId,
-      latitude: positionData.coords.latitude,
-      longitude: positionData.coords.longitude,
-      accuracy: positionData.coords.accuracy,
-      browser: navigator.userAgent,
+      latitude:
+        positionData.coords.latitude,
+      longitude:
+        positionData.coords.longitude,
+      accuracy:
+        positionData.coords.accuracy,
+      browser:
+        navigator.userAgent,
       os: os()
     });
 
-    msg(
+    attendanceMsg(
       result.message +
         (
           result.serverTime
-            ? " Waktu server: " + result.serverTime
+            ? " Waktu server: " +
+              result.serverTime
             : ""
         ),
       result.ok
@@ -259,7 +306,7 @@ async function attendance(type) {
         : "error"
     );
   } catch (error) {
-    msg(
+    attendanceMsg(
       error.message,
       "error"
     );
@@ -267,6 +314,190 @@ async function attendance(type) {
     $("masukBtn").disabled = false;
     $("keluarBtn").disabled = false;
   }
+}
+
+async function submitRequest(type) {
+  const nip =
+    localStorage.getItem(NIP_KEY);
+
+  const deviceId =
+    localStorage.getItem(DEV_KEY);
+
+  const field =
+    type === "IZIN"
+      ? "izinKeterangan"
+      : "dlTujuan";
+
+  const text =
+    $(field).value.trim();
+
+  if (!nip || !deviceId) {
+    return showVerify();
+  }
+
+  if (!text) {
+    return requestMsg(
+      type === "IZIN"
+        ? "Alasan izin wajib diisi."
+        : "Tujuan DL wajib diisi.",
+      "error"
+    );
+  }
+
+  const buttonId =
+    type === "IZIN"
+      ? "izinBtn"
+      : "dlBtn";
+
+  busy(
+    buttonId,
+    true,
+    "Mengirim..."
+  );
+
+  try {
+    const result = await api({
+      action: "submitRequest",
+      requestType: type,
+      nip,
+      deviceId,
+      keterangan: text
+    });
+
+    requestMsg(
+      result.message,
+      result.ok
+        ? "success"
+        : "error"
+    );
+
+    if (result.ok) {
+      $(field).value = "";
+      loadRequests();
+    }
+  } catch (error) {
+    requestMsg(
+      error.message,
+      "error"
+    );
+  } finally {
+    busy(
+      buttonId,
+      false,
+      type === "IZIN"
+        ? "AJUKAN IZIN"
+        : "AJUKAN DINAS LUAR"
+    );
+  }
+}
+
+async function loadRequests() {
+  const nip =
+    localStorage.getItem(NIP_KEY);
+
+  const deviceId =
+    localStorage.getItem(DEV_KEY);
+
+  if (
+    !nip ||
+    !deviceId ||
+    !$("requestList")
+  ) {
+    return;
+  }
+
+  $("requestList").innerHTML =
+    '<p class="muted">Memuat riwayat...</p>';
+
+  try {
+    const result = await api({
+      action: "getRequests",
+      nip,
+      deviceId
+    });
+
+    if (!result.ok) {
+      $("requestList").innerHTML =
+        '<p class="muted">' +
+        esc(result.message) +
+        "</p>";
+
+      return;
+    }
+
+    renderRequests(
+      result.requests || []
+    );
+  } catch (error) {
+    $("requestList").innerHTML =
+      '<p class="muted">' +
+      "Belum dapat memuat riwayat permohonan." +
+      "</p>";
+  }
+}
+
+function renderRequests(items) {
+  if (!items.length) {
+    $("requestList").innerHTML =
+      '<p class="muted">' +
+      "Belum ada permohonan." +
+      "</p>";
+
+    return;
+  }
+
+  $("requestList").innerHTML =
+    items
+      .map(item => {
+        const type =
+          item.jenis === "IZIN"
+            ? "Izin Tidak Masuk"
+            : "Dinas Luar (DL)";
+
+        const download =
+          item.fileUrl
+            ? `
+              <a
+                class="download"
+                href="${esc(item.fileUrl)}"
+                target="_blank"
+                rel="noopener"
+              >
+                DOWNLOAD SURAT
+              </a>
+            `
+            : "";
+
+        return `
+          <div class="request-item">
+            <div class="request-top">
+              <strong>${type}</strong>
+              <span>${esc(item.status)}</span>
+            </div>
+
+            <small>
+              ${esc(item.tanggal)}
+            </small>
+
+            <p>
+              ${esc(item.keterangan)}
+            </p>
+
+            ${
+              item.catatan
+                ? `
+                  <div class="note">
+                    ${esc(item.catatan)}
+                  </div>
+                `
+                : ""
+            }
+
+            ${download}
+          </div>
+        `;
+      })
+      .join("");
 }
 
 async function checkGps() {
@@ -277,7 +508,8 @@ async function checkGps() {
   );
 
   try {
-    const positionData = await position();
+    const positionData =
+      await position();
 
     $("gpsStatus").textContent =
       "GPS aktif. Akurasi ±" +
@@ -320,8 +552,7 @@ function position() {
 
       navigator.geolocation.getCurrentPosition(
         resolve,
-
-        error => {
+        error =>
           reject(
             Error(
               error.code === 1
@@ -330,9 +561,7 @@ function position() {
                   ? "Lokasi tidak tersedia. Aktifkan GPS/Lokasi."
                   : "Permintaan lokasi gagal/timeout."
             )
-          );
-        },
-
+          ),
         {
           enableHighAccuracy: true,
           timeout: 15000,
@@ -354,9 +583,8 @@ async function api(payload) {
     );
   }
 
-  const response = await fetch(
-    API_URL,
-    {
+  const response =
+    await fetch(API_URL, {
       method: "POST",
 
       headers: {
@@ -364,11 +592,12 @@ async function api(payload) {
           "text/plain;charset=utf-8"
       },
 
-      body: JSON.stringify(payload)
-    }
-  );
+      body:
+        JSON.stringify(payload)
+    });
 
-  const text = await response.text();
+  const text =
+    await response.text();
 
   try {
     return JSON.parse(text);
@@ -383,17 +612,14 @@ async function api(payload) {
 }
 
 function showVerify() {
-  $("verifyView").classList.remove(
-    "hidden"
-  );
+  $("verifyView")
+    .classList.remove("hidden");
 
-  $("confirmView").classList.add(
-    "hidden"
-  );
+  $("confirmView")
+    .classList.add("hidden");
 
-  $("attendanceView").classList.add(
-    "hidden"
-  );
+  $("attendanceView")
+    .classList.add("hidden");
 }
 
 function showAttendance(employee) {
@@ -401,45 +627,52 @@ function showAttendance(employee) {
     return showVerify();
   }
 
-  $("verifyView").classList.add(
-    "hidden"
-  );
+  $("verifyView")
+    .classList.add("hidden");
 
-  $("confirmView").classList.add(
-    "hidden"
-  );
+  $("confirmView")
+    .classList.add("hidden");
 
-  $("attendanceView").classList.remove(
-    "hidden"
-  );
+  $("attendanceView")
+    .classList.remove("hidden");
 
   $("greeting").textContent =
     "Halo, " + employee.nama;
 
   $("sessionData").innerHTML =
     rows(employee);
+
+  loadRequests();
 }
 
 function rows(employee) {
   return `
     <div class="row">
       <span>NIP</span>
-      <strong>${esc(employee.nip)}</strong>
+      <strong>
+        ${esc(employee.nip)}
+      </strong>
     </div>
 
     <div class="row">
       <span>Nama</span>
-      <strong>${esc(employee.nama)}</strong>
+      <strong>
+        ${esc(employee.nama)}
+      </strong>
     </div>
 
     <div class="row">
       <span>Bagian</span>
-      <strong>${esc(employee.bagian)}</strong>
+      <strong>
+        ${esc(employee.bagian)}
+      </strong>
     </div>
 
     <div class="row">
       <span>Jabatan</span>
-      <strong>${esc(employee.jabatan)}</strong>
+      <strong>
+        ${esc(employee.jabatan)}
+      </strong>
     </div>
   `;
 }
@@ -449,13 +682,14 @@ function esc(value) {
     value ?? ""
   ).replace(
     /[&<>"']/g,
-    match => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[match])
+    match =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[match])
   );
 }
 
@@ -464,60 +698,108 @@ function busy(
   isBusy,
   text
 ) {
-  $(id).disabled = isBusy;
-  $(id).textContent = text;
+  const element = $(id);
+
+  if (!element) {
+    return;
+  }
+
+  element.disabled = isBusy;
+  element.textContent = text;
 }
 
 function msg(
   text,
   type
 ) {
-  $("message").textContent =
+  const element =
+    $("message");
+
+  if (!element) {
+    return;
+  }
+
+  element.textContent =
     text || "";
 
-  $("message").className =
-    "message " + (type || "");
+  element.className =
+    "message " +
+    (type || "");
+}
+
+function attendanceMsg(
+  text,
+  type
+) {
+  const element =
+    $("attendanceMessage");
+
+  if (!element) {
+    return;
+  }
+
+  element.textContent =
+    text || "";
+
+  element.className =
+    "attendance-message " +
+    (type || "");
+}
+
+function requestMsg(
+  text,
+  type
+) {
+  const element =
+    $("requestMessage");
+
+  if (!element) {
+    return;
+  }
+
+  element.textContent =
+    text || "";
+
+  element.className =
+    "request-message " +
+    (type || "");
 }
 
 function os() {
   const userAgent =
     navigator.userAgent;
 
-  if (/Android/i.test(userAgent)) {
+  if (
+    /Android/i.test(
+      userAgent
+    )
+  ) {
     return "Android";
   }
 
   if (
-    /iPhone|iPad|iPod/i.test(userAgent)
+    /iPhone|iPad|iPod/i.test(
+      userAgent
+    )
   ) {
     return "iOS";
   }
 
-  if (/Windows/i.test(userAgent)) {
+  if (
+    /Windows/i.test(
+      userAgent
+    )
+  ) {
     return "Windows";
   }
 
-  if (/Mac OS X/i.test(userAgent)) {
+  if (
+    /Mac OS X/i.test(
+      userAgent
+    )
+  ) {
     return "macOS";
   }
 
   return "Unknown";
-}
-
-function resetSession() {
-  if (
-    !confirm(
-      "Hapus sesi browser ini?"
-    )
-  ) {
-    return;
-  }
-
-  clearSession();
-  showVerify();
-
-  msg(
-    "Sesi dihapus. Silakan verifikasi NIP kembali.",
-    "success"
-  );
 }
